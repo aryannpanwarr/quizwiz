@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
@@ -33,6 +33,11 @@ export default function QuizPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [glowColor, setGlowColor] = useState<"green" | "red" | null>(null);
 
+  // Image generation state
+  const [questionImages, setQuestionImages] = useState<Record<number, string | null>>({});
+  const [loadingImages, setLoadingImages] = useState<Set<number>>(new Set());
+  const generatingRef = useRef<Set<number>>(new Set());
+
   useEffect(() => {
     const raw = sessionStorage.getItem("quizwiz-quiz");
     if (!raw) {
@@ -51,6 +56,47 @@ export default function QuizPage() {
     }
   }, [router]);
 
+  // Background image generation
+  const generateImage = useCallback(async (idx: number, question: string) => {
+    if (generatingRef.current.has(idx)) return;
+    generatingRef.current.add(idx);
+    setLoadingImages(prev => new Set([...prev, idx]));
+
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+      const data = await res.json();
+      setQuestionImages(prev => ({ ...prev, [idx]: data.imageUrl ?? null }));
+    } catch {
+      setQuestionImages(prev => ({ ...prev, [idx]: null }));
+    } finally {
+      setLoadingImages(prev => {
+        const next = new Set(prev);
+        next.delete(idx);
+        return next;
+      });
+    }
+  }, []);
+
+  // Trigger image generation for current + next question
+  useEffect(() => {
+    if (questions.length === 0) return;
+
+    const q = questions[currentIndex];
+    if (q && !generatingRef.current.has(currentIndex)) {
+      generateImage(currentIndex, q.question);
+    }
+
+    const nextIdx = currentIndex + 1;
+    const nextQ = questions[nextIdx];
+    if (nextQ && !generatingRef.current.has(nextIdx)) {
+      generateImage(nextIdx, nextQ.question);
+    }
+  }, [currentIndex, questions, generateImage]);
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
@@ -65,7 +111,6 @@ export default function QuizPage() {
       if (!question) return;
 
       const selectedOptionId = active.id as string;
-      // Options are stored as "opt-{index}" — map back to option text
       const optionIndex = parseInt(selectedOptionId.replace("opt-", ""), 10);
       const selectedText = question.options[optionIndex];
       const isCorrect = selectedText === question.correctAnswer;
@@ -95,7 +140,6 @@ export default function QuizPage() {
         const nextIndex = currentIndex + 1;
 
         if (nextIndex >= questions.length) {
-          // Store results and navigate
           const results = {
             questions,
             answers: newAnswers,
@@ -138,10 +182,13 @@ export default function QuizPage() {
           transition={{ duration: 0.35 }}
           className="w-full max-w-4xl flex flex-col items-center"
         >
-          <QuestionCard question={question.question} />
+          <QuestionCard
+            question={question.question}
+            imageUrl={questionImages[currentIndex]}
+            imageLoading={loadingImages.has(currentIndex)}
+          />
 
           <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            {/* Grid layout: 4 options at corners, drop zone in center */}
             <div
               className="relative w-full"
               style={{ height: "360px" }}
@@ -159,7 +206,6 @@ export default function QuizPage() {
                 );
               })}
 
-              {/* Central drop zone */}
               <div
                 className={`
                   absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2

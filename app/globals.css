@@ -1,26 +1,151 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: #0f0520;
+  --color-foreground: #ffffff;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Purple gradient palette */
+  --color-purple-deep: #4c1d95;
+  --color-purple-700: #7c3aed;
+  --color-purple-600: #9333ea;
+  --color-purple-400: #c084fc;
+  --color-pink-400: #f472b6;
+  --color-coral-500: #f87171;
+  --color-coral-600: #fb7185;
+
+  /* Glass */
+  --color-glass-bg: rgba(255, 255, 255, 0.15);
+  --color-glass-border: rgba(255, 255, 255, 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ==============================
+   ANIMATED GRADIENT BACKGROUND
+   ============================== */
+body {
+  background-color: #0f0520;
+  color: var(--color-foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.gradient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    135deg,
+    #0f0520 0%,
+    #1a0533 15%,
+    #2d0a5e 30%,
+    #4c1d95 45%,
+    #7c3aed 55%,
+    #9333ea 70%,
+    #c084fc 85%,
+    #f472b6 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ==============================
+   FLOATING PARTICLES
+   ============================== */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: floatUp var(--duration, 8s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  opacity: 0;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(0.5);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--max-opacity, 0.4);
+  }
+  90% {
+    opacity: var(--max-opacity, 0.4);
+  }
+  100% {
+    transform: translateY(-10vh) translateX(var(--drift, 30px)) scale(1);
+    opacity: 0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* Sparkle / star shapes */
+.sparkle {
+  position: absolute;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--size, 20px);
+  animation: twinkle var(--duration, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: rotate(0deg) scale(0.5); }
+  50% { opacity: 1; transform: rotate(180deg) scale(1.2); }
+}
+
+/* Bokeh blobs (larger, soft glowing) */
+.bokeh {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+  animation: pulse-glow var(--duration, 6s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* ==============================
+   GLASSMORPHISM UTILITIES
+   ============================== */
+.glass-card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+/* Hover variant used by clickable cards */
+.glass-card-hover:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.gradient-button {
+  background: linear-gradient(135deg, #f87171, #fb7185, #f472b6);
+  border-radius: 9999px;
+  box-shadow: 0 4px 20px rgba(248, 113, 113, 0.5);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.gradient-button:hover:not(:disabled) {
+  box-shadow: 0 6px 28px rgba(248, 113, 113, 0.7);
+}
+
+.gradient-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
