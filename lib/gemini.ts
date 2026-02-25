@@ -12,8 +12,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 const IMAGE_MODELS = [
-  "gemini-3-pro-image-preview",   // preferred (Gemini 3 Pro)
-  "gemini-2.5-flash-image",       // fallback
+  "gemini-2.5-flash-image",
 ];
 
 export async function generateQuestionImage(question: string): Promise<string | null> {
