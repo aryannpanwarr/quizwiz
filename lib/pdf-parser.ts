@@ -1,9 +1,8 @@
-import { PDFParse } from "pdf-parse";
-
 const MAX_CHARACTERS = 5000;
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
+    const { PDFParse } = await import("pdf-parse");
     const parser = new PDFParse({ data: buffer });
     const result = await parser.getText();
     const text = result.text.trim();
