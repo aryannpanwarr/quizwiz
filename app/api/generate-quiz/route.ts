@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateQuiz } from "@/lib/gemini";
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "your_gemini_api_key_here") {
     return NextResponse.json(

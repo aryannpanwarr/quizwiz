@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateQuestionImage } from "@/lib/gemini";
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const { question } = await request.json() as { question?: string };
